@@ -16,8 +16,8 @@ email=konst555@mail.ru
 
 about=Plugin GeoGrid build SHAPE files - geographic grid, and frame borders
 
-tracker=none
-repository=none
+tracker=https://github.com/konst555/QGIS-geogrid-Plugin/issues
+repository=https://github.com/konst555/QGIS-geogrid-Plugin
 # End of mandatory metadata
 
 # Recommended items:
