@@ -377,4 +377,4 @@ class Ui_geogridDialogBase(object):
         self.add_layers.setText(_translate("geogridDialogBase", "Add layers to the current project", None))
 
 #from qgsmaplayercombobox import QgsMapLayerComboBox
-import resources_rc
+import resources
