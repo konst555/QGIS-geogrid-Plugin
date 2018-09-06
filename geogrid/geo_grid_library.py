@@ -41,9 +41,9 @@ def make_geogrid(qgis, savename, dLon, dLat, MinLon, MinLat, MaxLon, MaxLat,
   if len(savename) <= 0:
     return "No output filename given"
 
-  # Выходные файлы
+  # Выходные файлы  Output files
   outFeatures  = savename
-  # убрать расширение если есть
+  # убрать расширение если есть  remove extension if available
   if (outFeatures[-4] == "." ) : outFeatures = outFeatures[:-4]
   out_grd = outFeatures + "_grd.shp"
   out_brd = outFeatures + "_brd.shp"
@@ -53,19 +53,20 @@ def make_geogrid(qgis, savename, dLon, dLat, MinLon, MinLat, MaxLon, MaxLat,
 
                                             
   #==== Используемая координатная система ====== географическая на WGS84
+  #==== Used coordinate system == geographical WGS84 ===
   crsWGS = QgsCoordinateReferenceSystem(4326)
 #  crsWGS = QgsCoordinateReferenceSystem()
 #  crsWGS.createFromProj4("+proj=longlat +datum=WGS84 +no_defs")
 
   #=========================================================
-  #=================== Построение сетки ====================
+  #======== Построение сетки === Creating a Grid ===========
   #=========================================================
   
   # Cell size
   cW = float(dLon)
   cH = float(dLat)
 
-  # Выравнивание на первую линию
+  # Выравнивание на первую линию  Alignment to the first line
   minX = float( (int((MinLon+180)/cW)+1)*cW - 180 )  
   minY = float( (int((MinLat+90 )/cH)+1)*cH - 90  )
   maxX = float(MaxLon)
@@ -75,9 +76,6 @@ def make_geogrid(qgis, savename, dLon, dLat, MinLon, MinLat, MaxLon, MaxLat,
   ssX = float(n_subgrd)
   ssY = float(n_subgrd)
   
-#  QMessageBox.information(None, "Info"," minX="+unicode(minX)+" minY="+unicode(minY)+
-#                                       " maxX="+unicode(maxX)+" maxY="+unicode(maxY)+
-#                                       " cW="+unicode(cW)+" cH="+unicode(cH) )
   try:
       fields = QgsFields()
       fields.append(QgsField("Line_XY", QVariant.Int, "int", 24, 16, "Line_XY"))
@@ -96,18 +94,12 @@ def make_geogrid(qgis, savename, dLon, dLat, MinLon, MinLat, MaxLon, MaxLat,
       if (outfile.hasError() != QgsVectorFileWriter.NoError):
           return "Failure creating output shapefile: " + unicode(outfile.errorMessage())
 
-#          QMessageBox.information(None, "Info"," 1") 
-#          QMessageBox.information(None, "Info"," 21") 
-#          QMessageBox.information(None, "Info"," 3") 
-#          QMessageBox.information(None, "Info"," 4") 
-#          QMessageBox.information(None, "Info"," 2  "+ unicode(( (maxY-minY)/(cH/ssY) )) ) 
-
       #================================================== 
       #=============== Make Longitude lines, by X =======
       #================================================== 
       for i in range( int( (maxX-minX)/cW ) +1 ):
           polyline = []
-          #== Дополнительная точка до рамки
+          #== Дополнительная точка до рамки  Additional point to the frame
           if ( minY > (MinLat + 0.001) ):
               polyline.append(QgsPoint(float(minX+cW*i),float( MinLat)))
 
@@ -115,7 +107,7 @@ def make_geogrid(qgis, savename, dLon, dLat, MinLon, MinLat, MaxLon, MaxLat,
               polyline.append(QgsPoint( (minX+cW*i), (minY+(cH/ssY)* j)    )) 
               polyline.append(QgsPoint( (minX+cW*i), (minY+(cH/ssY)*(j+1)) ))
 
-          #== Дополнительная точка до рамки
+          #== Дополнительная точка до рамки  Additional point to the frame
           if ( MaxLat > (minY+(cH/ssY)*(j+1)) ):
               polyline.append(QgsPoint( float(minX+cW*i), float(MaxLat)) )
 
@@ -135,7 +127,7 @@ def make_geogrid(qgis, savename, dLon, dLat, MinLon, MinLat, MaxLon, MaxLat,
       #================================================== 
       for j in range( int( (maxY-minY)/cH ) +1 ): 
           polyline = []
-          #== Дополнительная точка до рамки
+          #== Дополнительная точка до рамки  Additional point to the frame
           if ( minX > (MinLon + 0.001) ):
               polyline.append(QgsPoint(MinLon, (minY+cH*j)))
 
@@ -143,7 +135,7 @@ def make_geogrid(qgis, savename, dLon, dLat, MinLon, MinLat, MaxLon, MaxLat,
               polyline.append(QgsPoint( (minX+(cW/ssX)* i ),   (minY+cH*j) ))
               polyline.append(QgsPoint( (minX+(cW/ssX)*(i+1)), (minY+cH*j) ))
 
-          #== Дополнительная точка до рамки
+          #== Дополнительная точка до рамки  Additional point to the frame
           if ( MaxLon > (minX+(cW/ssX)*(i+1)) ):
               polyline.append(QgsPoint( MaxLon, (minY+cH*j) ))
 
@@ -162,11 +154,11 @@ def make_geogrid(qgis, savename, dLon, dLat, MinLon, MinLat, MaxLon, MaxLat,
   except Exception as e:
       return e.message
   # Закрытие файла и удаление ссылки на него
+  # Closing a file and deleting a link to it
   del outfile
 
-
   #=========================================================
-  #=================== Построение рамки ====================
+  #========== Построение рамки === Creating a frame ========
   #=========================================================
 
   # Cell size
@@ -174,7 +166,8 @@ def make_geogrid(qgis, savename, dLon, dLat, MinLon, MinLat, MaxLon, MaxLat,
   cH = float(n_brdminuts)/60.0
  
   # Рамка по всей области с точностью до минут
-  # Выравнивание 
+  # Frame throughout the area with an accuracy of minutes
+  # Выравнивание Alignment
   minX = float( (int((MinLon+180)/cW)+1)*cW - 180 )  
   minY = float( (int((MinLat+90 )/cH)+1)*cH - 90  )
   maxX = float(MaxLon)
@@ -190,14 +183,14 @@ def make_geogrid(qgis, savename, dLon, dLat, MinLon, MinLat, MaxLon, MaxLat,
   # Xmin - by Y - side 1
   Last_ID = 1  
   odd_id = 0
-  #== Дополнительная точка 
+  #== Дополнительная точка Additional point
   if ( minY > MinLat ):
       coordsList.append([Last_ID, MinLon, MinLat, odd_id])
   for j in range( int( (maxY-minY)*(60.0/n_brdminuts) )+1 ):
       coordsList.append([Last_ID, MinLon, (minY+(cH/ssY)* j ), odd_id])
       if odd_id == 0 : odd_id = 1
       else : odd_id = 0 
-  #== Дополнительная точка 
+  #== Дополнительная точка Additional point
   if ( minX > MinLon ):
       coordsList.append([Last_ID, MinLon, MaxLat, odd_id])
   odd_id1 = odd_id
@@ -205,7 +198,7 @@ def make_geogrid(qgis, savename, dLon, dLat, MinLon, MinLat, MaxLon, MaxLat,
   # Ymax - by X -side 2
   Last_ID = 2
   odd_id = 0
-#        #== Дополнительная точка 
+#        #== Дополнительная точка Additional point
 #        if ( minX > MinLon ):
 #            coordsList.append([Last_ID, MinLon, MaxLat, odd_id])
   for i in range( int( (maxX-minX)*(60.0/n_brdminuts) )+1 ):
@@ -235,12 +228,13 @@ def make_geogrid(qgis, savename, dLon, dLat, MinLon, MinLat, MaxLon, MaxLat,
       coordsList.append([Last_ID, (minX+(cW/ssX)* i ), MinLat, odd_id])
       if odd_id == 0 : odd_id = 1
       else : odd_id = 0 
-  #== Дополнительная точка 
+  #== Дополнительная точка Additional point
   if ( minX > MinLon ):
       coordsList.append([Last_ID, MinLon, MinLat, odd_id])
 
 
   #============== Создание и запись shape ============
+  #============== Creating and writing shape =========
   try:
       fields = QgsFields()
       fields.append(QgsField("sideID", QVariant.Int, "int", 24, 16, "sideID"))
@@ -272,7 +266,7 @@ def make_geogrid(qgis, savename, dLon, dLat, MinLon, MinLat, MaxLon, MaxLat,
           outfile.addFeature(feature)
 
 
-      # ================ Угловые точки ==============
+      # ======== Угловые точки ==== The corner points ==========
       coordsList = []
       minX = MinLon  
       minY = MinLat
@@ -312,23 +306,22 @@ def make_geogrid(qgis, savename, dLon, dLat, MinLon, MinLat, MaxLon, MaxLat,
 
   except Exception as e:
       return e.message
-  # Закрытие файла и удаление ссылки на него
+  # Закрытие файла и удаление ссылки на него = Closing a file 
   del outfile
 
   #=========================================================
-  #=================== Построение тиков ====================
+  #==== Построение тиков == Creating tics ==================
   #=========================================================
 
   # Рамка и тики по всей области с точностью до минут
+  # Frame and tics throughout the area with an accuracy of minutes
   minX = float(MinLon)  
   minY = float(MinLat)
   maxX = float(MaxLon)
   maxY = float(MaxLat)  
-  
-
-  
-  # ================== Первый набор тиков ==============
-  # === с заданным шагом от 1 минуты 
+ 
+  # ======= Первый набор тиков == First set of ticks ============
+  # === с заданным шагом от 1 минуты  with a given step from 1 minute
   # SubStep
   ssX = 1.0
   ssY = 1.0
@@ -337,7 +330,7 @@ def make_geogrid(qgis, savename, dLon, dLat, MinLon, MinLat, MaxLon, MaxLat,
   cW = float(n_brdtik)/(60.0*ssX) 
   cH = float(n_brdtik)/(60.0*ssY) 
 
-  # Выравнивание 
+  # Выравнивание Alignment
   minX = float( (int((MinLon+180)/cW)+1)*cW - 180 )  
   minY = float( (int((MinLat+90 )/cH)+1)*cH - 90 )
   
@@ -364,8 +357,9 @@ def make_geogrid(qgis, savename, dLon, dLat, MinLon, MinLat, MaxLon, MaxLat,
   for i in range( int( (maxX-minX)/cW ), -1,-1 ):
       coordsList.append([Last_ID, (minX+cW*i), MinLat])
 
-  # ================== Второй набор тиков ==============
+  # ==== Второй набор тиков == The second set of ticks ========
   # === В соответствии с разбиением рамки
+  # === In accordance with the partitioning of the frame
   #=============== Make List of coordinates (ID, X, Y) ========
   # SubStep
   ssX = 1.0
@@ -399,8 +393,8 @@ def make_geogrid(qgis, savename, dLon, dLat, MinLon, MinLat, MaxLon, MaxLat,
   for i in range( int( (maxX-minX)/cW ), -1,-1 ):
       coordsList.append([Last_ID, (minX+cW*i), MinLat])
 
-  # ================== третий набор тиков  ==============
-  # ===  1/2 деления разбиением рамки
+  # === третий набор тиков = third set of ticks =============
+  # === 1/2 деления разбиением рамки = 1/2 division of the frame
   #=============== Make List of coordinates (ID, X, Y) ========
   # SubStep
   ssX = 2.0
@@ -410,7 +404,7 @@ def make_geogrid(qgis, savename, dLon, dLat, MinLon, MinLat, MaxLon, MaxLat,
   cW = float( n_brdminuts/(60.0*ssX) )
   cH = float( n_brdminuts/(60.0*ssY) )
 
-  # Выравнивание 
+  # Выравнивание Alignment
   minX = float( (int((MinLon+180)/cW)+1)*cW - 180 )  
   minY = float( (int((MinLat+90 )/cH)+1)*cH - 90  ) 
 
@@ -436,6 +430,7 @@ def make_geogrid(qgis, savename, dLon, dLat, MinLon, MinLat, MaxLon, MaxLat,
 
   
   #============== Создание и запись shape ============
+  #============== Creating and writing shape =========
   try:
       fields = QgsFields()
       fields.append(QgsField("tikID", QVariant.Int, "int", 24, 16, "tikID"))
@@ -480,7 +475,7 @@ def make_geogrid(qgis, savename, dLon, dLat, MinLon, MinLat, MaxLon, MaxLat,
   del outfile
 
   # =================================================
-  # ==   Построение надписей   ======================
+  # ==   Построение надписей   == Creating labels ===
   # =================================================
 
   #=============== Make List of coordinates (ID, X, Y) ========
@@ -492,7 +487,7 @@ def make_geogrid(qgis, savename, dLon, dLat, MinLon, MinLat, MaxLon, MaxLat,
   cW = float(n_lblminuts)/(60.0*ssX)
   cH = float(n_lblminuts)/(60.0*ssY)
 
-  # Выравнивание 
+  # Выравнивание Alignment
   minX = (int((MinLon+180)/cW)+1)*cW - 180.0  
   minY = (int((MinLat+90 )/cH)+1)*cH - 90.0
   maxX = float(MaxLon)
@@ -506,7 +501,11 @@ def make_geogrid(qgis, savename, dLon, dLat, MinLon, MinLat, MaxLon, MaxLat,
       pYd = int(abs(pY))
       pYm = int( (abs(pY)-pYd + 0.00001)*60 )
       pY_ns = "N"
-      if (pY<0) : pY_ns = "S"            
+      if (pY<0) : pY_ns = "S"
+      # корректировка 60' correction 60 '
+      if (pYm == 60) :
+          pYm = 0
+          pYd = pYd+1            
       coordsList.append([Last_ID, MinLon, (minY+cH*j), pYd, pYm, pY_ns])
           
   # Ymax - by X -side 2
@@ -517,6 +516,10 @@ def make_geogrid(qgis, savename, dLon, dLat, MinLon, MinLat, MaxLon, MaxLat,
       pXm = int( (abs(pX)-pXd + 0.00001)*60 )
       pX_ew = "E"
       if (pX<0) : pX_ew = "W"            
+      # корректировка 60' correction 60 '
+      if (pXm == 60) :
+          pXm = 0
+          pXd = pXd+1            
       coordsList.append([Last_ID, (minX+cW*i), maxY, pXd, pXm, pX_ew])
   
   # Xmax - by Y - side 3
@@ -526,7 +529,11 @@ def make_geogrid(qgis, savename, dLon, dLat, MinLon, MinLat, MaxLon, MaxLat,
       pYd = int(abs(pY))
       pYm = int( (abs(pY)-pYd + 0.00001)*60 )
       pY_ns = "N"
-      if (pY<0) : pY_ns = "S"            
+      if (pY<0) : pY_ns = "S"
+      # корректировка 60' correction 60 '
+      if (pYm == 60) :
+          pYm = 0
+          pYd = pYd+1            
       coordsList.append([Last_ID, maxX, (minY+cH*j), pYd, pYm, pY_ns])
           
   # Ymin - by X -side 4
@@ -537,10 +544,14 @@ def make_geogrid(qgis, savename, dLon, dLat, MinLon, MinLat, MaxLon, MaxLat,
       pXm = int( (abs(pX)-pXd + 0.00001)*60 )
       pX_ew = "E"
       if (pX<0) : pX_ew = "W"            
+      # корректировка 60' correction 60 '
+      if (pXm == 60) :
+          pXm = 0
+          pXd = pXd+1            
       coordsList.append([Last_ID, (minX+cW*i), MinLat, pXd, pXm, pX_ew])
 
-
   #============== Создание и запись shape ============
+  #============== Creating and writing shape =========
   try:
       fields = QgsFields()
       fields.append(QgsField("sideID", QVariant.Int, "int", 24, 16, "sideID"))
@@ -572,7 +583,7 @@ def make_geogrid(qgis, savename, dLon, dLat, MinLon, MinLat, MaxLon, MaxLat,
 
   except Exception as e:
       return e.message
-  # Закрытие файла и удаление ссылки на него
+  # Закрытие файла и удаление ссылки на него Close file
   del outfile
 
   #===========================================
@@ -600,13 +611,10 @@ def make_geogrid(qgis, savename, dLon, dLat, MinLon, MinLat, MaxLon, MaxLat,
     (errorMsg, result) = Vlayer_tik.loadNamedStyle( style_path )
     style_path = os.path.join( os.path.dirname(__file__), "base_lbl.qml" )
     (errorMsg, result) = Vlayer_lbl.loadNamedStyle( style_path )
-
     
   qgis_completion_message(qgis, unicode(outFeatures) + "[ _grd,_brd,_tik,_lbl ].shp features grid shapefiles created")
 
   return None
-
-
 
 #======== Local Utils ============
 def qgis_status_message(qgis, message):
